@@ -1,7 +1,7 @@
 ## Hardware: schematics, parts list, wiring, etc.
 ### Quick List:
 - Arduino Nano
-- Breadboard
+- 35KG Continuous Servo
 - NeoPIxel 10 LED Strip
 - OV2640 ArduCam
 - 5x Buttons
