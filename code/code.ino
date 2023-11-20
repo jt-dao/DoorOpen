@@ -1,3 +1,6 @@
+// Code v1. Unoptimized, messy, prototypical rough draft for my proof of concept. Padlock works, 
+// LED user feedback works as well, and updating LCD messages
+
 #include <Adafruit_NeoPixel.h>
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
