@@ -1,42 +1,38 @@
-// Code v1. Unoptimized, messy, prototypical rough draft for my proof of concept. Padlock works, 
-// LED user feedback works as well, and updating LCD messages. Servo not connected yet, but should be simple addition.
-
 #include <Adafruit_NeoPixel.h>
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include <Servo.h>
 
+Servo myservo;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
-const int button1 = 2; //first button is on pin 8
+const int button1 = 2; //black
 const int button2 = 3; //second is on pin 9
-const int button3 = 4; //third is pin 10
-const int button4 = 6; //fourth is pin 11
-const int button5 = 5; //third is pin 10
-const int button6 = 7; //fourth is pin 11
-const int Red = 11; //red LED is on pin 4
-const int greenLed = 8; //green LED is pin 12
+const int button4 = 4; // red
+const int button6 = 6; //white
+
 void checkEntered1(int button);
 
-int code[] = {2,2,2,2,2,2}; //dummy code for security
+int code[] = {6,4,2,6,6,2}; //W R B W W B
                         //separated by commas
 
 int entered[7]; //create a new empty array for the code entered by
-                //the user (has 4 elements)
-#define PIR_PIN     8    // Pin connected to the PIR sensor
-#define BUTTON_PIN  3     // Pin connected to the button
+                //the user (has 6 elements)
+#define BUTTON_PIN  3     // Pin connected to the button 2
 #define LED_PIN     9     // Pin connected to the NeoPixel strip
 #define LED_COUNT  10     // Number of LEDs in the strip
+
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 int lastButtonState = LOW;  // Previous state of the button
 int color = 0;       // Current color index
-int pirState = LOW;         // Current state of the PIR sensor
-int lastPirState = LOW;     // Previous state of the PIR sensor
+
 
 uint32_t colors[] = {strip.Color(255, 0, 0), strip.Color(0, 0, 235), };
 int numColors = 2; // Total number of colors
 
 void setup() {
+  myservo.attach(12);
   Serial.begin(9600); //begin Serial
   lcd.init();                      // initialize the lcd 
   lcd.init();
@@ -44,11 +40,9 @@ void setup() {
   lcd.backlight();
   lcd.setCursor(3,0);
   pinMode(button1, INPUT_PULLUP); //button 1 is an input
-  pinMode(button3, INPUT_PULLUP); //button 3 is an input
   pinMode(button4, INPUT_PULLUP); //button 3 is an input
-  pinMode(Red, OUTPUT); //the red LED is an output
-  pinMode(greenLed, OUTPUT); // the green LED is an output
-  digitalWrite(Red, LOW); //turn the red LED on
+  pinMode(button6, INPUT_PULLUP); //button 4 is an input
+
   for (int i = 0; i < 6;i++){ //work through numbers 0-3
     Serial.println(code[i]); //print each digit of the code
     Serial.println(entered[i]); //print each element of the entered[]
@@ -57,7 +51,6 @@ void setup() {
   }
   strip.begin();                          // Initialize the NeoPixel strip
   strip.show();                           // Initialize all pixels to 'off'
-  pinMode(PIR_PIN, INPUT);                // Initialize the PIR sensor pin as input
   pinMode(BUTTON_PIN, INPUT_PULLUP);      // Initialize the button pin as input with internal pull-up
 }
 
@@ -91,25 +84,26 @@ void loop() {
       checkEntered1(2); //call checkEntered1 and pass it a 2
       delay(250); //wait
       }
-    else if (digitalRead(button3) == LOW){ //if button3 is pressed
-      checkEntered1(3); //call checkEntered1 and pass it a 3
-      delay(250); //wait
-          }
     else if (digitalRead(button4) == LOW){ //if button3 is pressed
       checkEntered1(4); //call checkEntered1 and pass it a 3
       delay(250); //wait
           }
+    else if (digitalRead(button6) == LOW){ //if button4 is pressed
+      checkEntered1(6); //call checkEntered1 and pass it 4
+      delay(250); //wait
+          }
   }
   else {
-    if ((digitalRead(button1) == LOW) || (digitalRead(button3) == LOW) || (digitalRead(button4) == LOW) ){
+    if ((digitalRead(button1) == LOW) || (digitalRead(button4) == LOW) || (digitalRead(button6) == LOW) ){
       lcd.clear();
       lcd.setCursor(3,0);
       lcd.print("Wait... ");
-      // motor pin
-      delay(2000);
+      myservo.write(0);      
+      delay(1800); 
       lcd.clear();
+      myservo.write(90); 
       lcd.print("Enter! Push door.");
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 6; i++) {
         strip.fill(strip.Color(12, 255, 12));
         strip.show();
         delay(500);
@@ -119,6 +113,10 @@ void loop() {
       }
       lcd.clear();
       lcd.setCursor(0,0);
+      delay(3050);
+      myservo.write(180);
+      delay(1180);
+      myservo.write(90);
       lcd.print("Open! Press any ");
       lcd.setCursor(0,1);
       lcd.print("button to enter.");
@@ -205,11 +203,14 @@ void compareCode(){ //checks if the code entered is correct by comparing the cod
     Serial.println(entered[i]);
   }// right?
   if ((entered[0]==code[0]) && (entered[1]==code[1]) && (entered[2]==code[2]) && (entered[3]==code[3]) && (entered[4]==code[4])&& (entered[5]==code[5])){ //if all the elements of each array are equal
+    Serial.println("right");
     lcd.clear();
     lcd.setCursor(3,0);
     lcd.print("Wait... ");
-    // motor pin
-    delay(2000);
+    myservo.write(0);      
+    delay(1800); 
+    lcd.clear();
+    myservo.write(90); 
     lcd.clear();
     lcd.print("Enter! Push door. ");
     for (int i = 0; i < 4; i++) {
@@ -220,12 +221,16 @@ void compareCode(){ //checks if the code entered is correct by comparing the cod
       strip.show();
       delay(500);
       }
+    delay(3050);
+      myservo.write(180);
+      delay(1180);
+      myservo.write(90);
     lcd.clear();
     lcd.setCursor(3,0);
     lcd.print("Closed. ");
     lcd.setCursor(3,1);
     lcd.print("Passcode? ");
-    for (int i = 0; i < 7; i++){ //this next loop is for debugging
+    for (int i = 0; i < 6; i++){ //this next loop is for debugging
       entered[i] = 0;
     }
     loop(); //return to loop() (not really necessary)
@@ -235,6 +240,7 @@ void compareCode(){ //checks if the code entered is correct by comparing the cod
      //if you (or the intruder) get the code wrong
     lcd.clear();
     lcd.setCursor(3,0);
+    Serial.println("wrong");
     lcd.print("Wrong code. ");
     for (int i = 0; i < 4; i++) {
       strip.fill(strip.Color(255, 0, 0));
@@ -245,19 +251,17 @@ void compareCode(){ //checks if the code entered is correct by comparing the cod
       delay(500);
       }
     lcd.clear();
+    for (int i = 0; i < 7; i++){ //this next loop is for debugging
+      entered[i] = 0;
+    }
     lcd.setCursor(3,0);
     lcd.print("Closed. ");
     lcd.setCursor(3,1);
     lcd.print("Passcode? ");
-    
     strip.fill(strip.Color(255, 0, 0));
     strip.show();
     strip.fill(strip.Color(255, 0, 0));
     strip.show();
-    for (int i = 0; i < 7; i++){ //this next loop is for debugging
-      entered[i] = 0;
-     
-    }
     loop();
   }
 }
