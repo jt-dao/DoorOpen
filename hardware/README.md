@@ -3,6 +3,6 @@
 - Arduino Nano
 - 35KG Continuous Servo
 - NeoPIxel 10 LED Strip
-- OV2640 ArduCam
+- OV2640 ESP32 Cam
 - 5x Buttons
 - Bunch of jumper cables
